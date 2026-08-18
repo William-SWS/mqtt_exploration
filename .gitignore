@@ -1,0 +1,51 @@
+# Python e ambientes locais (serão criados somente em tarefas futuras)
+__pycache__/
+*.py[cod]
+.venv/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Credenciais e configuração privada
+.env
+.env.*
+!.env.example
+kaggle.json
+access_token
+*.pem
+*.key
+
+# Dados de origem presentes apenas na máquina local
+MQTT Under Attack Dataset/
+MQTT Under Attack Dataset.pdf
+data/raw/**
+data/interim/**
+data/processed/**
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+# Saídas reproduzíveis e artefatos potencialmente grandes
+artifacts/**
+results/tables/**
+results/figures/**
+!artifacts/.gitkeep
+!results/tables/.gitkeep
+!results/figures/.gitkeep
+
+# Estudos, modelos e bancos locais
+*.joblib
+*.pt
+*.pth
+*.onnx
+*.db
+*.sqlite
+*.sqlite3
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
