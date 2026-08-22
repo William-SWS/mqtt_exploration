@@ -154,3 +154,12 @@ Este documento é **append-only**. Cada decisão recebe um ID estável, data, st
 - **Evidência:** bootstrap de frames independentes ignora autocorrelação temporal.
 - **Alternativas:** sem intervalos ou bootstrap IID.
 - **Consequências:** tamanho e regra de construção dos blocos devem constar no manifesto e no relatório.
+
+## ADR-018 — Bootstrap automático e ambiente único para scripts e notebooks
+
+- **Data:** 2026-08-22
+- **Status:** aceita
+- **Decisão:** usar `uv run --locked` como porta de entrada de todo código executável. O projeto declara as dependências de produção, teste, lint e Jupyter no `pyproject.toml`; o `uv.lock` fixa suas versões. Scripts serão iniciados pelo comando de console `mqtt-ids` e notebooks por `uv run --locked --group notebook jupyter lab`, ambos criando ou sincronizando `.venv` automaticamente antes da execução.
+- **Evidência:** o mesmo mecanismo elimina a instalação manual, permite iniciar o primeiro script ou notebook em um checkout limpo e mantém a instalação fiel ao lockfile. O runner mínimo valida YAML com `safe_load`, aceita estágios e retomada e grava manifesto com identidade determinística, configuração resolvida, seed, ambiente e status.
+- **Alternativas:** exigir `uv sync --locked` manual antes de cada uso; instalar dependências dentro de scripts/notebooks; ou manter ambientes diferentes para CLI e Jupyter.
+- **Consequências:** comandos executáveis devem ser documentados e chamados via `uv run --locked`; notebooks não instalam pacotes com `pip` nem contêm lógica de produção. O checkout reproduzível é sincronizado com `uv sync --locked` quando a instalação explícita for desejada; saídas continuam fora do Git.

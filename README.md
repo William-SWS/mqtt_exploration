@@ -2,9 +2,20 @@
 
 Este repositório é uma trilha prática para construir, auditar e comparar um sistema de detecção de intrusão em tráfego MQTT. A prioridade é aprender um processo experimental confiável: proveniência dos dados, prevenção de vazamento, validação temporal, desbalanceamento, seleção de features, calibração, ensembles e reprodutibilidade.
 
-## Estado atual
+## Como executar
 
-A entrega atual contém **somente documentação e o esqueleto de diretórios**. Ainda não há projeto Python inicializado, `pyproject.toml`, `uv.lock`, ambiente virtual, notebooks preenchidos, código funcional, modelos treinados ou resultados experimentais. Cada passo de implementação está descrito em [`docs/tasks`](docs/tasks/).
+O repositório usa Python 3.12+ e `uv`. Não crie nem ative manualmente um ambiente: `uv run --locked` cria ou sincroniza `.venv` automaticamente a partir de `uv.lock`, sem resolver versões novas. Isso vale tanto para scripts quanto para notebooks.
+
+```bash
+uv run --locked mqtt-ids --scenario configs/diagnostics.yaml
+uv run --locked pytest
+uv run --locked ruff check .
+uv run --locked --group notebook jupyter lab
+```
+
+O último comando inicia o JupyterLab no mesmo ambiente bloqueado do projeto. Para registrar um kernel de forma explícita, execute `uv run --locked --group notebook python -m ipykernel install --user --name mqtt-investigation`.
+
+O runner aceita `--stage diagnostics`, `--resume` e `--output-dir`. Cada execução válida gera `artifacts/runs/<identidade>/manifest.json`, com cenário resolvido, identidade determinística, seed, versões e status.
 
 ## Dados e motivação
 
