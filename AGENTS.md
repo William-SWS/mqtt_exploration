@@ -1,34 +1,39 @@
-# Repository Guidelines
+# Agent Instructions
 
-## Project Structure & Module Organization
+## Package Manager
 
-This documentation-first MQTT intrusion-detection project keeps the PRD, decisions, and issue drafts in `docs/`. Future reusable Python logic belongs in `src/mqtt_ids/`. Use `scripts/` for thin entrypoints, `configs/` for YAML scenarios, and `notebooks/` for exploration only. Place tests in `tests/`, mirroring package modules where practical. Generated content in `data/`, `artifacts/`, and `results/` is ignored by Git.
+- Use `uv`; preserve `uv.lock`.
+- Setup: `uv sync --locked --all-groups`.
+- Execute project commands with `uv run --locked`.
 
-## Build, Test, and Development Commands
+## File-Scoped Commands
 
-No executable Python project exists yet: there is no `pyproject.toml`, lockfile, or test suite. The first implementation uses Python 3.12 and `uv`, per [`docs/issues/01-project-runner.md`](docs/issues/01-project-runner.md). Once initialized, use:
+| Task | Command |
+| --- | --- |
+| Test runner | `uv run --locked pytest tests/test_runner.py` |
+| Test config | `uv run --locked pytest tests/test_config.py` |
+| Test all | `uv run --locked pytest` |
+| Lint a file | `uv run --locked ruff check path/to/file.py` |
+| Format a file | `uv run --locked ruff format path/to/file.py` |
 
-```bash
-uv sync --locked       # install the exact locked environment
-uv run pytest          # run the test suite
-uv run ruff check .    # lint
-uv run ruff format .   # format
+## Key Conventions
+
+- PT-BR for documentation and user-facing text; English for code, APIs, YAML keys, and tests.
+- Library code: `src/mqtt_ids/`; thin entrypoints: `scripts/`; exploration only: `notebooks/`.
+- Tests use `pytest`, `test_*.py`, `test_<behavior>`, fixtures, and `tmp_path`; never use local datasets, credentials, or generated artifacts.
+- Load YAML with `safe_load` and validate it before execution.
+- Keep raw data immutable. Fit preprocessing, resampling, and supervised selection only in training folds.
+- Update `docs/DECISIONS.md` with a new ADR; never rewrite a prior decision.
+
+## Test Documentation
+
+- `docs/testing/scenarios.md` is the canonical catalogue of test scenarios.
+- On the command `lint tests`: inventory every `tests/test_*.py` and each `test_*` function; create or update the catalogue for undocumented tests before running validation. Record source test, inputs or setup, expected behavior, and the narrowest execution command.
+
+## Commit Attribution
+
+- Commits created by agents include their own attribution trailer:
+
+```text
+Co-Authored-By: <agent model> <noreply@example.com>
 ```
-
-Document any additional runner command in `README.md` when it is introduced.
-
-## Coding Style & Naming Conventions
-
-Write documentation and user-facing explanations in PT-BR; use English for Python modules, APIs, configuration keys, functions, and tests. Follow four-space Python indentation. Prefer `snake_case` for files, functions, variables, and YAML keys; `PascalCase` for classes; and clear, domain-specific names such as `temporal_split.py` or `test_data_contract.py`. Use Ruff for formatting and linting once tooling is added. Keep scripts small: they may call library functions but must not launch other scripts with `subprocess`.
-
-## Testing Guidelines
-
-Use `pytest` and name files `test_*.py` and tests `test_<behavior>`. Add focused tests for data contracts, temporal-split isolation, configuration validation, and deterministic manifests. Keep raw data immutable; tests should use fixtures and `tmp_path`, never depend on local datasets, credentials, or generated artifacts. Fit preprocessing, resampling, and supervised selection only inside training folds to prevent leakage.
-
-## Commit & Pull Request Guidelines
-
-Recent history uses short imperative subjects and occasional conventional prefixes, for example `docs: establish MQTT IDS learning path`. Keep commits narrow and use a prefix where useful (`docs:`, `feat:`, `test:`). Pull requests should explain the change, reference the relevant issue draft or issue, list validation commands run, and include screenshots only for visual output. Do not commit datasets, secrets, model files, databases, or result artifacts.
-
-## Decision and Configuration Safety
-
-`docs/DECISIONS.md` need to be updated manually or automaticaly for future report creation or presentations: supersede a decision with a new ADR rather than editing history. Load YAML with `safe_load`, validate it before execution, and keep Kaggle tokens and other credentials outside the repository.

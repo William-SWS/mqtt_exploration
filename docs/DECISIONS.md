@@ -163,3 +163,21 @@ Este documento é **append-only**. Cada decisão recebe um ID estável, data, st
 - **Evidência:** o mesmo mecanismo elimina a instalação manual, permite iniciar o primeiro script ou notebook em um checkout limpo e mantém a instalação fiel ao lockfile. O runner mínimo valida YAML com `safe_load`, aceita estágios e retomada e grava manifesto com identidade determinística, configuração resolvida, seed, ambiente e status.
 - **Alternativas:** exigir `uv sync --locked` manual antes de cada uso; instalar dependências dentro de scripts/notebooks; ou manter ambientes diferentes para CLI e Jupyter.
 - **Consequências:** comandos executáveis devem ser documentados e chamados via `uv run --locked`; notebooks não instalam pacotes com `pip` nem contêm lógica de produção. O checkout reproduzível é sincronizado com `uv sync --locked` quando a instalação explícita for desejada; saídas continuam fora do Git.
+
+## ADR-019 — Cobertura comportamental do runner mínimo
+
+- **Data:** 2026-08-22
+- **Status:** aceita
+- **Decisão:** cobrir o runner por testes de comportamento usando `tmp_path`. A interface de linha de comando é exercitada em subprocesso para verificar cenário inválido, seleção de estágio, manifesto concluído e retomada; o runner é chamado diretamente para verificar identidade determinística e manifesto de falha. A validação de cenários YAML é parametrizada para cobrir arquivo ausente, chaves ausentes ou desconhecidas, valores inválidos e sintaxe YAML incorreta.
+- **Evidência:** os critérios da issue 01 exigem falha antecipada da configuração, retomada, identidade determinística, manifesto autocontido e teste end-to-end sem depender de dados locais.
+- **Alternativas:** validar somente por execução manual; testar apenas funções internas; ou usar arquivos persistentes dentro do repositório nos testes.
+- **Consequências:** novos estágios, campos de cenário e resultados persistidos devem receber testes correspondentes. Testes não acessam dados brutos, credenciais ou artefatos reais e usam diretórios temporários descartáveis.
+
+## ADR-020 — Catálogo de cenários de teste e manutenção orientada por agentes
+
+- **Data:** 2026-08-22
+- **Status:** aceita
+- **Decisão:** manter `docs/testing/scenarios.md` como catálogo legível dos testes. Cada cenário registra o teste de origem, a entrada ou preparação, o resultado esperado e o comando de execução. O comando de agente `lint tests` inventaria os arquivos e funções em `tests/` e cria ou atualiza a documentação de testes ainda não catalogados antes da validação.
+- **Evidência:** a suíte executável é precisa, mas não é suficiente como material de aprendizagem para quem está começando. Associar cada teste ao seu propósito permite conferir a cobertura da issue e localizar rapidamente o comando adequado.
+- **Alternativas:** documentar testes somente em comentários no código; manter uma lista manual sem relação com os nomes dos testes; ou depender exclusivamente do relatório do pytest.
+- **Consequências:** toda adição, remoção ou renomeação de teste requer atualização do catálogo. A documentação descreve comportamento esperado, mas não substitui a execução da suíte.
