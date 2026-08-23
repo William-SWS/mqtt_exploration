@@ -8,6 +8,7 @@ O repositório usa Python 3.12+ e `uv`. Não crie nem ative manualmente um ambie
 
 ```bash
 uv run --locked mqtt-ids --scenario configs/diagnostics.yaml
+uv run --locked mqtt-kaggle-assets --help
 uv run --locked pytest
 uv run --locked ruff check .
 uv run --locked --group notebook jupyter lab

@@ -26,6 +26,7 @@ data/processed/**
 !data/raw/.gitkeep
 !data/interim/.gitkeep
 !data/processed/.gitkeep
+data
 
 # Saídas reproduzíveis e artefatos potencialmente grandes
 artifacts/**

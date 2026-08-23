@@ -20,13 +20,13 @@ Criar o primeiro caminho executável do produto: um projeto Python 3.12 reproduz
 
 ## Acceptance criteria
 
-- [ ] Um checkout limpo sincroniza o ambiente a partir do lockfile sem resolver versões novas.
-- [ ] O pacote é importável fora da raiz do projeto.
-- [ ] O runner aceita cenário, estágios e retomada e executa um diagnóstico verificável.
-- [ ] Configuração ausente, desconhecida ou inválida falha antes de executar qualquer estágio.
-- [ ] Uma execução concluída ou falha produz manifesto autocontido e identidade determinística.
-- [ ] O teste end-to-end usa diretório temporário e verifica comportamento externo do comando.
-- [ ] Dados, credenciais, ambientes, bancos e artefatos grandes permanecem fora do Git.
+- [x] Um checkout limpo sincroniza o ambiente a partir do lockfile sem resolver versões novas.
+- [x] O pacote é importável fora da raiz do projeto.
+- [x] O runner aceita cenário, estágios e retomada e executa um diagnóstico verificável.
+- [x] Configuração ausente, desconhecida ou inválida falha antes de executar qualquer estágio.
+- [x] Uma execução concluída ou falha produz manifesto autocontido e identidade determinística.
+- [x] O teste end-to-end usa diretório temporário e verifica comportamento externo do comando.
+- [x] Dados, credenciais, ambientes, bancos e artefatos grandes permanecem fora do Git.
 
 ## Blocked by
 
