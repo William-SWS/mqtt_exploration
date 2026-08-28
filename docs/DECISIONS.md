@@ -181,3 +181,75 @@ Este documento é **append-only**. Cada decisão recebe um ID estável, data, st
 - **Evidência:** a suíte executável é precisa, mas não é suficiente como material de aprendizagem para quem está começando. Associar cada teste ao seu propósito permite conferir a cobertura da issue e localizar rapidamente o comando adequado.
 - **Alternativas:** documentar testes somente em comentários no código; manter uma lista manual sem relação com os nomes dos testes; ou depender exclusivamente do relatório do pytest.
 - **Consequências:** toda adição, remoção ou renomeação de teste requer atualização do catálogo. A documentação descreve comportamento esperado, mas não substitui a execução da suíte.
+
+## ADR-021 — Recuperação seletiva de arquivos apagados sem reverter o histórico posterior
+
+- **Data:** 2026-08-28
+- **Status:** aceita
+- **Decisão:** restaurar seletivamente arquivos apagados por um commit usando como fonte o commit pai, somente depois de verificar que o commit pertence ao histórico do `HEAD` atual e que os mesmos caminhos não receberam alterações posteriores. Não reverter o commit inteiro quando o objetivo for apenas recuperar os arquivos.
+- **Evidência:** um commit apagou 15 arquivos em `docs/tasks/`. O diretório não teve novos commits entre esse commit e o `HEAD` da branch `fix/repair_issues`, e nenhum dos caminhos existia no `HEAD`. A restauração recuperou os 15 arquivos com conteúdo idêntico ao estado imediatamente anterior à exclusão, sem modificar outros arquivos nem reescrever o histórico.
+- **Alternativas:** executar `git revert <codigo do commit>`, recuperar arquivos manualmente por cópia ou mover a branch para um commit antigo. O `revert` atua sobre todo o commit; a cópia manual é mais sujeita a erro; mover a branch descartaria ou reescreveria o histórico posterior.
+- **Consequências:** os arquivos recuperados aparecem como não rastreados quando continuam ausentes no `HEAD`; devem ser revisados, adicionados e registrados em um novo commit separadamente. Se algum caminho tiver sido recriado ou alterado depois da exclusão, a restauração direta não deve sobrescrevê-lo: compare as versões e integre o conteúdo manualmente.
+
+### Procedimento utilizado
+
+1. Confirmar que o diretório de trabalho está limpo antes de começar:
+
+   ```bash
+   git status --short
+   ```
+
+2. Inspecionar o commit e listar somente os arquivos que ele apagou:
+
+   ```bash
+   git show --stat --summary c309807774ed0430f60847d91552e1120f2f6e89
+   git diff-tree --no-commit-id --diff-filter=D --name-status -r <codigo do commit >
+   ```
+
+3. Confirmar que o commit é ancestral do `HEAD`. A saída `0` indica que ele pertence ao histórico atual:
+
+   ```bash
+   git merge-base --is-ancestor c309807774ed0430f60847d91552e1120f2f6e89 HEAD
+   echo $?
+   ```
+
+4. Procurar alterações posteriores nos caminhos que serão recuperados:
+
+   ```bash
+   git log --format='%H %s' --name-status `codigo do commit`..HEAD -- docs/tasks
+   git ls-tree -r --name-only HEAD -- docs/tasks
+   ```
+
+   Neste caso, ambos os comandos confirmaram que não havia conteúdo posterior em `docs/tasks/`. Se aparecer qualquer alteração, interrompa a restauração em bloco e analise cada arquivo para não sobrescrever trabalho posterior.
+
+5. Restaurar somente os caminhos apagados, usando o pai do commit como fonte:
+
+   ```bash
+   git restore --source='codigocommit' -- docs/tasks
+   ```
+
+   O sufixo `^` significa “pai desse commit”, isto é, o estado em que os arquivos ainda existiam. O separador `--` encerra as opções e faz com que `docs/tasks` seja interpretado exclusivamente como caminho. Em um caso com alterações posteriores dentro do mesmo diretório, informe individualmente apenas os arquivos seguros no lugar de `docs/tasks`.
+
+6. Conferir o resultado sem adicionar ou criar commit automaticamente:
+
+   ```bash
+   git status --short --untracked-files=all
+   ```
+
+   Foram recuperados `docs/tasks/00_project_foundations.md` até `docs/tasks/14_future_edge_benchmark.md`, totalizando 15 arquivos. Todos foram comparados por blob/hash com o commit pai e estavam idênticos à versão anterior à exclusão.
+
+### Receita reutilizável
+
+Para outro commit comum, substitua o hash e use caminhos explícitos:
+
+```bash
+commit='<hash-do-commit-que-apagou-os-arquivos>'
+git status --short
+git diff-tree --no-commit-id --diff-filter=D --name-only -r "$commit"
+git merge-base --is-ancestor "$commit" HEAD
+git log --name-status "$commit"..HEAD -- caminho/arquivo1 caminho/arquivo2
+git restore --source="${commit}^" -- caminho/arquivo1 caminho/arquivo2
+git status --short --untracked-files=all
+```
+
+Esse procedimento altera somente o diretório de trabalho. Depois da revisão, `git add` e `git commit` devem ser executados conscientemente para registrar a recuperação como uma nova mudança, preservando todos os commits posteriores.
