@@ -8,6 +8,7 @@ O repositório usa Python 3.12+ e `uv`. Não crie nem ative manualmente um ambie
 
 ```bash
 uv run --locked mqtt-ids --scenario configs/diagnostics.yaml
+uv run --locked mqtt-ids --scenario configs/kaggle-acquisition.local.yaml --stage acquire
 uv run --locked mqtt-kaggle-assets --help
 uv run --locked pytest
 uv run --locked ruff check .
@@ -16,7 +17,13 @@ uv run --locked --group notebook jupyter lab
 
 O último comando inicia o JupyterLab no mesmo ambiente bloqueado do projeto. Para registrar um kernel de forma explícita, execute `uv run --locked --group notebook python -m ipykernel install --user --name mqtt-investigation`.
 
-O runner aceita `--stage diagnostics`, `--resume` e `--output-dir`. Cada execução válida gera `artifacts/runs/<identidade>/manifest.json`, com cenário resolvido, identidade determinística, seed, versões e status.
+O runner aceita `--stage diagnostics`, `--stage acquire`, `--resume` e
+`--output-dir`. Cada execução válida gera
+`artifacts/runs/<identidade>/manifest.json`, com cenário resolvido, identidade
+determinística, seed, versões e status. Copie
+`configs/kaggle-acquisition.example.yaml` para
+`configs/kaggle-acquisition.local.yaml`, substitua o handle e mantenha a cópia local
+fora do Git caso ela revele um Dataset privado.
 
 ## Dados e motivação
 

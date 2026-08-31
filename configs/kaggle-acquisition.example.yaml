@@ -1,0 +1,16 @@
+run:
+  name: kaggle-acquisition
+  seed: 20260831
+dataset:
+  handle: OWNER/SLUG/versions/N
+  data_dir: data
+  doi: 10.6084/m9.figshare.24420958
+  license: CC-BY-4.0
+  authors:
+    - Héctor Alaiz-Moretón
+    - Jose Antonio Aveleira-Mata
+    - Saúl Díez Fernández
+    - Ángel Luis Muñoz Castañeda
+    - Isaías García-Rodríguez
+    - Carmen Benavides
+    - José Alberto Benítez-Andrades

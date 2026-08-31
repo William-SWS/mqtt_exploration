@@ -5,6 +5,30 @@ import pytest
 from mqtt_ids.config import ScenarioError, load_scenario
 
 
+def test_scenario_loads_versioned_dataset_provenance(tmp_path: Path) -> None:
+    scenario_path = tmp_path / "acquire.yaml"
+    scenario_path.write_text(
+        """run:
+  name: acquire
+  seed: 7
+dataset:
+  handle: owner/data/versions/3
+  data_dir: data
+  doi: 10.6084/m9.figshare.24420958
+  license: CC-BY-4.0
+  authors:
+    - Example Author
+""",
+        encoding="utf-8",
+    )
+
+    scenario = load_scenario(scenario_path)
+
+    assert scenario.dataset is not None
+    assert scenario.dataset.handle == "owner/data/versions/3"
+    assert scenario.dataset.authors == ("Example Author",)
+
+
 @pytest.mark.parametrize(
     ("content", "message"),
     [

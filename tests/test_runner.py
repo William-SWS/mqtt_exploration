@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 
 from mqtt_ids import runner
-from mqtt_ids.config import Scenario
+from mqtt_ids.config import DatasetConfig, Scenario
+from mqtt_ids.kaggle_assets import KaggleAssetError
 from mqtt_ids.runner import run_experiment
 
 
@@ -128,3 +129,31 @@ def test_cli_records_selected_stage(tmp_path: Path) -> None:
 
     assert manifest["stages"] == ["diagnostics"]
     assert manifest["status"] == "completed"
+
+
+def test_acquisition_failure_is_recorded_in_runner_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scenario = Scenario(
+        name="acquire",
+        seed=7,
+        dataset=DatasetConfig(
+            handle="owner/data/versions/1",
+            data_dir=tmp_path / "data",
+            doi="10.6084/m9.figshare.24420958",
+            license="CC-BY-4.0",
+            authors=("Example Author",),
+        ),
+    )
+
+    def fail(*args: object, **kwargs: object) -> dict[str, object]:
+        raise KaggleAssetError("SHA-256 divergente após download")
+
+    monkeypatch.setattr(runner, "acquire_dataset", fail)
+
+    with pytest.raises(KaggleAssetError, match="SHA-256 divergente"):
+        run_experiment(scenario, ["acquire"], tmp_path / "runs")
+
+    manifest = json.loads(next((tmp_path / "runs").glob("*/manifest.json")).read_text())
+    assert manifest["status"] == "failed"
+    assert manifest["error"]["message"] == "SHA-256 divergente após download"
