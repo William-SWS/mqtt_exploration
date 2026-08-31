@@ -12,8 +12,9 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from mqtt_ids.config import Scenario
+from mqtt_ids.kaggle_assets import DatasetMetadata, acquire_dataset
 
-SUPPORTED_STAGES = ("diagnostics",)
+SUPPORTED_STAGES = ("diagnostics", "acquire")
 
 
 def run_experiment(
@@ -46,6 +47,18 @@ def run_experiment(
         for stage in selected_stages:
             if stage == "diagnostics":
                 manifest["diagnostics"] = _diagnostics()
+            elif stage == "acquire":
+                if scenario.dataset is None:
+                    raise ValueError("O estágio acquire exige a seção 'dataset'.")
+                manifest["dataset"] = acquire_dataset(
+                    scenario.dataset.handle,
+                    scenario.dataset.data_dir,
+                    DatasetMetadata(
+                        doi=scenario.dataset.doi,
+                        license=scenario.dataset.license,
+                        authors=scenario.dataset.authors,
+                    ),
+                )
         manifest["status"] = "completed"
     except Exception as error:
         manifest["status"] = "failed"

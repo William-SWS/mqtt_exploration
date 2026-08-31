@@ -253,3 +253,12 @@ git status --short --untracked-files=all
 ```
 
 Esse procedimento altera somente o diretório de trabalho. Depois da revisão, `git add` e `git commit` devem ser executados conscientemente para registrar a recuperação como uma nova mudança, preservando todos os commits posteriores.
+
+## ADR-022 — Aquisição Kaggle versionada, validada e promovida atomicamente
+
+- **Data:** 2026-08-31
+- **Status:** aceita
+- **Decisão:** integrar ao runner um estágio `acquire` configurado por handle Kaggle versionado e atribuição explícita. O download ocorre em diretório temporário no mesmo filesystem, valida nomes e SHA-256 e somente então substitui uma árvore vazia/de placeholders. Uma cópia existente é reutilizada apenas quando seu manifesto e seus bytes continuam válidos. Versões publicadas de Dataset e Model são registradas no manifesto em uma segunda operação, pois o upload do KaggleHub não retorna o número criado.
+- **Evidência:** o KaggleHub recusa `output_dir` não vazio; handles sem versão significam conteúdo mutável; downloads parciais e cache não verificado não provam integridade. Testes com adaptador simulado demonstram promoção, reutilização, preservação do destino em falha e manifesto `failed`.
+- **Alternativas:** baixar diretamente em `data/` com `force_download`; confiar no cache do KaggleHub; usar sempre a versão mais recente; ou manter aquisição fora do runner.
+- **Consequências:** cenários de aquisição devem declarar handle, destino, DOI, licença e autores; um destino com dados não reconhecidos não é sobrescrito; novos datasets exigem hashes e metadata próprios; após uploads, o operador confirma `N` no Kaggle e executa o comando de registro correspondente.

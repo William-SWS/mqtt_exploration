@@ -12,6 +12,7 @@ from mqtt_ids.kaggle_assets import (
     KaggleAssetError,
     download_dataset,
     download_model,
+    record_published_version,
     upload_dataset,
     upload_model,
 )
@@ -26,9 +27,7 @@ def main() -> None:
     commands = parser.add_subparsers(dest="command", required=True)
 
     upload_data = commands.add_parser("upload-dataset")
-    upload_data.add_argument(
-        "--handle", default=os.getenv("KAGGLE_DATASET_HANDLE")
-    )
+    upload_data.add_argument("--handle", default=os.getenv("KAGGLE_DATASET_HANDLE"))
     upload_data.add_argument("--data-dir", type=Path, default=Path("data"))
     upload_data.add_argument("--version-notes", required=True)
 
@@ -52,6 +51,18 @@ def main() -> None:
         "--output-dir", type=Path, default=Path("artifacts/models")
     )
 
+    record_data = commands.add_parser("record-dataset-version")
+    record_data.add_argument(
+        "--handle", default=os.getenv("KAGGLE_DATASET_VERSION_HANDLE")
+    )
+    record_data.add_argument("--manifest", required=True, type=Path)
+
+    record_trained = commands.add_parser("record-model-version")
+    record_trained.add_argument(
+        "--handle", default=os.getenv("KAGGLE_MODEL_VERSION_HANDLE")
+    )
+    record_trained.add_argument("--manifest", required=True, type=Path)
+
     arguments = parser.parse_args()
     if not arguments.handle:
         required_variable = {
@@ -59,6 +70,8 @@ def main() -> None:
             "download-dataset": "KAGGLE_DATASET_VERSION_HANDLE",
             "upload-model": "KAGGLE_MODEL_HANDLE",
             "download-model": "KAGGLE_MODEL_VERSION_HANDLE",
+            "record-dataset-version": "KAGGLE_DATASET_VERSION_HANDLE",
+            "record-model-version": "KAGGLE_MODEL_VERSION_HANDLE",
         }[arguments.command]
         parser.error(f"Informe --handle ou defina {required_variable} no .env.")
     try:
@@ -76,8 +89,14 @@ def main() -> None:
         elif arguments.command == "upload-model":
             upload_model(arguments.model_dir, arguments.handle, arguments.version_notes)
             print(f"Modelo enviado: {arguments.handle}")
-        else:
+        elif arguments.command == "download-model":
             print(download_model(arguments.handle, arguments.output_dir))
+        elif arguments.command == "record-dataset-version":
+            record_published_version(arguments.manifest, "dataset", arguments.handle)
+            print(arguments.manifest)
+        else:
+            record_published_version(arguments.manifest, "model", arguments.handle)
+            print(arguments.manifest)
     except KaggleAssetError as error:
         parser.error(str(error))
 

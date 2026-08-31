@@ -3,7 +3,104 @@ from pathlib import Path
 import pytest
 
 from mqtt_ids import kaggle_assets
-from mqtt_ids.kaggle_assets import KaggleAssetError, sha256, upload_model
+from mqtt_ids.kaggle_assets import (
+    DatasetMetadata,
+    KaggleAssetError,
+    acquire_dataset,
+    record_published_version,
+    sha256,
+    upload_model,
+)
+
+
+def test_acquisition_downloads_atomically_and_reuses_valid_data(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    payloads = {
+        "Intrusion.csv": b"intrusion",
+        "DoS.csv": b"dos",
+        "MitM.csv": b"mitm",
+    }
+    monkeypatch.setattr(
+        kaggle_assets,
+        "RAW_HASHES",
+        {
+            name: __import__("hashlib").sha256(value).hexdigest()
+            for name, value in payloads.items()
+        },
+    )
+    calls: list[str] = []
+
+    class FakeKaggleHub:
+        def dataset_download(self, handle: str, **kwargs: object) -> str:
+            calls.append(handle)
+            destination = Path(str(kwargs["output_dir"]))
+            for category in ("raw", "interim", "processed"):
+                (destination / category).mkdir(parents=True)
+            for name, value in payloads.items():
+                (destination / "raw" / name).write_bytes(value)
+            return str(destination)
+
+    monkeypatch.setattr(kaggle_assets, "_kagglehub", lambda: FakeKaggleHub())
+    destination = tmp_path / "data"
+    metadata = DatasetMetadata(
+        doi="10.6084/m9.figshare.24420958",
+        license="CC-BY-4.0",
+        authors=("Example Author",),
+    )
+
+    first = acquire_dataset("owner/data/versions/3", destination, metadata)
+    second = acquire_dataset("owner/data/versions/3", destination, metadata)
+
+    assert calls == ["owner/data/versions/3"]
+    assert first["reused"] is False
+    assert second["reused"] is True
+    assert second["owner"] == "owner"
+    assert second["slug"] == "data"
+    assert second["version"] == 3
+    assert second["doi"] == metadata.doi
+    assert second["license"] == metadata.license
+    assert second["authors"] == ["Example Author"]
+    assert {item["name"] for item in second["files"]} == set(payloads)
+
+
+def test_failed_acquisition_preserves_placeholder_destination(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "data"
+    for category in ("raw", "interim", "processed"):
+        (destination / category).mkdir(parents=True)
+        (destination / category / ".gitkeep").touch()
+
+    class FakeKaggleHub:
+        def dataset_download(self, handle: str, **kwargs: object) -> str:
+            staged = Path(str(kwargs["output_dir"])) / "raw"
+            staged.mkdir(parents=True)
+            (staged / "Intrusion.csv").write_bytes(b"corrupted")
+            return str(staged.parent)
+
+    monkeypatch.setattr(kaggle_assets, "_kagglehub", lambda: FakeKaggleHub())
+
+    with pytest.raises(KaggleAssetError, match="deve existir exatamente uma vez"):
+        acquire_dataset(
+            "owner/data/versions/1",
+            destination,
+            DatasetMetadata("doi", "CC-BY-4.0", ("Author",)),
+        )
+
+    assert (destination / "raw" / ".gitkeep").is_file()
+    assert not (destination / "raw" / "Intrusion.csv").exists()
+
+
+def test_versioned_asset_is_recorded_in_local_manifest(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text('{"status": "completed"}\n', encoding="utf-8")
+
+    record_published_version(manifest_path, "model", "owner/model/sklearn/baseline/2")
+
+    assert __import__("json").loads(manifest_path.read_text())["published_assets"] == {
+        "model": "owner/model/sklearn/baseline/2"
+    }
 
 
 @pytest.mark.parametrize(

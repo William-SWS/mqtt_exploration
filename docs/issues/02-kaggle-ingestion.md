@@ -40,25 +40,25 @@ visibilidade antes de qualquer publicação.
 
 ## Acceptance criteria
 
-- [ ] Handles sem `/versions/N` são rejeitados antes do download.
-- [ ] `Intrusion.csv`, `DoS.csv` e `MitM.csv` são exigidos sem renomeação silenciosa.
-- [ ] Hash divergente ou arquivo ausente interrompe o estágio e deixa status `failed` explicativo.
-- [ ] Download válido pode ser retomado sem duplicar dados ou manifestos.
-- [ ] O manifesto registra owner/slug, versão, DOI, licença, autores, tamanho e hashes.
-- [ ] Nenhum token, arquivo de autenticação ou valor secreto aparece em log, manifesto ou Git.
-- [ ] A checklist mantém o dataset privado até revisão manual de atribuição e integridade.
-- [ ] Todo modelo concluído é empacotado com seu formato serializado, metadata e
+- [x] Handles sem `/versions/N` são rejeitados antes do download.
+- [x] `Intrusion.csv`, `DoS.csv` e `MitM.csv` são exigidos sem renomeação silenciosa.
+- [x] Hash divergente ou arquivo ausente interrompe o estágio e deixa status `failed` explicativo.
+- [x] Download válido pode ser retomado sem duplicar dados ou manifestos.
+- [x] O manifesto registra owner/slug, versão, DOI, licença, autores, tamanho e hashes.
+- [x] Nenhum token, arquivo de autenticação ou valor secreto aparece em log, manifesto ou Git.
+- [x] A checklist mantém o dataset privado até revisão manual de atribuição e integridade.
+- [x] Todo modelo concluído é empacotado com seu formato serializado, metadata e
   hashes, enviado a um Kaggle Model privado e tem seu handle versionado registrado
   no manifesto local.
-- [ ] Um modelo salvo pode ser baixado em diretório explicitamente informado por um
+- [x] Um modelo salvo pode ser baixado em diretório explicitamente informado por um
   handle `owner/model/framework/variation/N`; handle sem `/N` é rejeitado pelo
   fluxo reproduzível.
-- [ ] O upload de Dataset ou Model cria uma nova versão sem remover versões
+- [x] O upload de Dataset ou Model cria uma nova versão sem remover versões
   anteriores, e a checklist mantém ambos privados até revisão manual.
 
 ## Blocked by
 
-- {{ISSUE_01}}
+- [Issue 01 — runner do projeto](01-project-runner.md) (concluída)
 
 ## User stories covered
 

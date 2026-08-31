@@ -12,6 +12,7 @@ __pycache__/
 .env
 .env.*
 !.env.example
+configs/*.local.yaml
 kaggle.json
 access_token
 *.pem

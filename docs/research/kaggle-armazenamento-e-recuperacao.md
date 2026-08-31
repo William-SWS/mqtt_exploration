@@ -209,27 +209,99 @@ ao manifesto da execução que a usou.
 
 ### Passo 4 — restaurar os dados em qualquer máquina autorizada
 
-Baixe uma categoria específica para dentro da mesma árvore `data/`:
+O KaggleHub exige que `output_dir` esteja vazio. Como a árvore `data/` do
+repositório já contém arquivos `.gitkeep` (e pode conter dados locais), apontar
+`--data-dir data` diretamente causa `FileExistsError: output_dir is not empty`.
+Isso é uma restrição do **destino do download**, não do Dataset remoto: não é
+necessário esvaziar ou apagar o Dataset no Kaggle.
+
+Crie um diretório temporário vazio, baixe nele e deixe o comando validar os
+nomes e hashes antes de copiar os arquivos para a árvore do projeto:
 
 ```bash
-# Restaura somente a cópia imutável em data/raw/ e recalcula seus hashes.
-uv run --locked mqtt-kaggle-assets download-dataset \
-  --handle OWNER/mqtt-under-attack-data/versions/N \
-  --data-dir data \
-  --category raw
+download_dir="$(mktemp -d /tmp/mqtt-kaggle-download.XXXXXX)"
 
-# Restaura somente dados derivados para data/interim/ ou data/processed/.
 uv run --locked mqtt-kaggle-assets download-dataset \
   --handle OWNER/mqtt-under-attack-data/versions/N \
-  --data-dir data \
-  --category interim
+  --data-dir "$download_dir"
+
+# Execute somente depois que o download e a validação terminarem com sucesso.
+cp -a "$download_dir"/. data/
 ```
 
-Troque `interim` por `processed` para a terceira categoria. Sem `--category`, o
-comando restaura a árvore toda. Para não misturar uma cópia já existente, use
-primeiro outra raiz, por exemplo `--data-dir /tmp/mqtt-restore/data`, examine os
-arquivos e só então promova-os para a pasta desejada. O runner rejeita handles
-sem versão antes do download.
+Para restaurar somente uma categoria, use outro diretório temporário vazio:
+
+```bash
+download_dir="$(mktemp -d /tmp/mqtt-kaggle-raw.XXXXXX)"
+
+uv run --locked mqtt-kaggle-assets download-dataset \
+  --handle OWNER/mqtt-under-attack-data/versions/N \
+  --data-dir "$download_dir" \
+  --category raw
+
+cp -a "$download_dir"/. data/
+```
+
+Troque `raw` por `interim` ou `processed` conforme necessário. Sem
+`--category`, o comando restaura a árvore toda. A cópia com `cp -a` mescla o
+conteúdo validado com `data/`; revise previamente o destino se não quiser
+substituir arquivos locais de mesmo nome. O runner rejeita handles sem versão
+antes do download.
+
+O upload tem o comportamento oposto: `data/` deve conter os arquivos que serão
+publicados. O comando monta um pacote temporário, ignora `.gitkeep`, valida os
+três CSVs brutos e publica uma nova versão no Dataset existente:
+
+```bash
+uv run --locked mqtt-kaggle-assets upload-dataset \
+  --data-dir data \
+  --version-notes 'Descrição verificável da alteração'
+```
+
+Após o upload, consulte a aba **Versions** no Kaggle e atualize
+`KAGGLE_DATASET_VERSION_HANDLE=OWNER/SLUG/versions/N` no `.env`. Cada upload
+com o mesmo `KAGGLE_DATASET_HANDLE=OWNER/SLUG` acrescenta uma versão e conserva
+as anteriores.
+
+### Passo 4.1 — executar a aquisição pelo runner
+
+O comando manual é útil para sincronização, mas experimentos devem usar o
+estágio `acquire`, pois ele inclui a identidade dos dados no cenário e registra
+sucesso ou falha no manifesto da execução. Prepare a configuração sem alterar o
+template versionado:
+
+```bash
+cp configs/kaggle-acquisition.example.yaml configs/kaggle-acquisition.local.yaml
+# Edite OWNER/SLUG/versions/N; confirme DOI, licença e autores.
+
+uv run --locked mqtt-ids \
+  --scenario configs/kaggle-acquisition.local.yaml \
+  --stage acquire
+```
+
+Vantagens para o projeto:
+
+- o handle sem versão falha antes da rede, evitando que "latest" mude uma
+  execução silenciosamente;
+- o download ocorre em diretório temporário no mesmo filesystem e somente é
+  promovido depois de nomes e hashes passarem;
+- uma falha preserva o destino anterior e produz manifesto com `status: failed`;
+- uma cópia existente só é reutilizada quando handle, atribuição, tamanhos e
+  SHA-256 continuam idênticos, economizando rede sem confiar cegamente no cache;
+- o manifesto registra owner, slug, versão, DOI, licença, autores, tamanhos e
+  hashes, conectando cada resultado aos bytes que o produziram.
+
+`--resume` evita reexecutar uma execução cujo manifesto já esteja concluído:
+
+```bash
+uv run --locked mqtt-ids \
+  --scenario configs/kaggle-acquisition.local.yaml \
+  --stage acquire \
+  --resume
+```
+
+A vantagem é tornar repetições baratas e determinísticas. Sem `--resume`, o
+estágio ainda valida e reutiliza a cópia local antes de decidir acessar a rede.
 
 ### Passo 5 — publicar cada modelo treinado
 
@@ -268,6 +340,42 @@ uv run --locked mqtt-kaggle-assets download-model \
 
 O download só é aceito para versão explícita e o pacote é verificado contra
 `sha256sums.txt` antes que o código de treino/inferência o carregue.
+
+### Passo 7 — registrar no manifesto a versão publicada
+
+O KaggleHub cria a versão, mas sua função de upload não retorna o número `N`.
+Por isso, depois de confirmar `N` na aba **Versions**, registre-o explicitamente
+no manifesto da execução:
+
+```bash
+uv run --locked mqtt-kaggle-assets record-dataset-version \
+  --handle OWNER/SLUG/versions/N \
+  --manifest artifacts/runs/IDENTIDADE/manifest.json
+
+uv run --locked mqtt-kaggle-assets record-model-version \
+  --handle OWNER/MODEL/FRAMEWORK/VARIATION/N \
+  --manifest artifacts/runs/IDENTIDADE/manifest.json
+```
+
+Com as variáveis `KAGGLE_DATASET_VERSION_HANDLE` e
+`KAGGLE_MODEL_VERSION_HANDLE` preenchidas, `--handle` pode ser omitido. Os
+comandos validam a forma versionada e atualizam o JSON atomicamente em
+`published_assets`. A vantagem é impedir que um artefato publicado fique sem o
+endereço imutável necessário para recuperá-lo em outra máquina.
+
+## Referência dos comandos e benefícios
+
+| Comando | Função | Vantagem para o projeto |
+| --- | --- | --- |
+| `kaggle auth login` | Autentica interativamente a máquina. | Mantém credenciais fora do Git e permite revogação por usuário. |
+| `mqtt-kaggle-assets upload-dataset` | Valida a árvore `data/`, empacota proveniência e cria uma versão. | Preserva versões anteriores e bloqueia upload de raw divergente. |
+| `mqtt-kaggle-assets download-dataset` | Baixa um handle fixado, valida e promove atomicamente a árvore completa. | Evita dados parciais e reutiliza somente cópia local comprovadamente válida. |
+| `mqtt-ids --stage acquire` | Executa aquisição como parte do cenário. | Liga dados, atribuição, ambiente e status ao manifesto experimental. |
+| `mqtt-kaggle-assets upload-model` | Valida pesos, metadata, manifesto e `sha256sums.txt` antes do envio. | Impede publicar um modelo impossível de auditar ou carregar com segurança. |
+| `mqtt-kaggle-assets download-model` | Recupera uma versão exata e verifica todos os hashes declarados. | Garante que inferência use os mesmos bytes do treinamento publicado. |
+| `record-dataset-version` | Grava `OWNER/SLUG/versions/N` no manifesto. | Fecha a cadeia entre execução local e Dataset remoto. |
+| `record-model-version` | Grava a versão da Variation no manifesto. | Torna o modelo concluído recuperável sem depender de "latest". |
+| `pytest tests/test_kaggle_assets.py` | Exercita contratos sem rede, credenciais ou dados reais. | Detecta regressões de integridade com execução rápida e isolada. |
 
 ## Autenticação sem vazar segredo
 
