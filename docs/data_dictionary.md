@@ -20,6 +20,38 @@ projeto.
 - `float64` em vários campos inteiros ou booleanos é consequência da presença
   de `NaN`, não uma redefinição do tipo semântico.
 
+## Como consultar programaticamente em Python
+
+O catálogo pode ser consultado de forma tipada e estruturada via `scripts/data_dictionary.py`.
+
+### Execução via linha de comando
+
+```bash
+uv run --locked python scripts/data_dictionary.py
+```
+
+Esse comando lê este documento Markdown, estrutura todas as 67 colunas e exibe a distribuição por política, colunas 100% vazias e exemplos de consultas.
+
+### Consulta em notebooks ou scripts
+
+```python
+from scripts.data_dictionary import load_data_dictionary
+
+dd = load_data_dictionary()
+
+# Metadados de uma coluna específica
+col = dd["frame.time_delta"]
+print(col.description)       # Significado
+print(col.dos.missing_pct)   # Ausentes em DoS (%)
+
+# Filtragem de colunas por política
+portable_features = dd.portable_columns
+excluded_features = dd.excluded_columns
+
+# Tabela rica para exibição no Jupyter
+display(dd.to_dataframe())
+```
+
 ## Campos comuns a todos os frames
 
 | Variável | Significado | Tipo semântico | Origem | dtype observado | Ausentes D/M/I | Card. D/M/I | Política preliminar |
