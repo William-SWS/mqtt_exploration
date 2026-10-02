@@ -28,10 +28,14 @@ MSGTYPE_NAMES = {
 NO_MQTT = "(sem MQTT)"
 RESERVED = "(tipo fora da tabela)"
 
-def msgtype_by_clss(df: pd.DataFrame) -> pd.DataFrame:
+def msgtype_by_class(df: pd.DataFrame) -> pd.DataFrame:
     """Conta frames por tipo de pacote MQTT e por classe"""
     codes = df["mqtt.msgtype"]
     names = codes.map(MSGTYPE_NAMES)
     names = names.mask(codes.notna() & names.isna(), RESERVED).fillna(NO_MQTT)
     table = pd.crosstab(names, df["type"])
-    
+    return table.loc[table.sum(axis=1).sort_values(ascending=False).index]
+
+def mqtt_share_by_class(df: pd.DataFrame) -> pd.Series:
+    """Fração de grames com camada MQTT em cada classe"""
+    return df["mqtt.msgtype"].notna().groupby(df["type"]).mean()
