@@ -35,3 +35,7 @@ None - can start immediately.
 ## User stories covered
 
 1–9 e fundação de 101–104.
+
+## Notas de execução
+
+- Curso: aulas 01-1, 01-2 e 01-3 escritas e verificadas por replay; detalhes nas entradas 2, 3 e 4 de `course/LOG.md`.

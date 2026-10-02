@@ -25,7 +25,12 @@ mqtt-ids = "mqtt_ids.cli:main"
 mqtt-kaggle-assets = "mqtt_ids.kaggle_assets_cli:main"
 
 [dependency-groups]
-dev = ["pytest>=9.0.2", "ruff>=0.14.14"]
+dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.7",
+    "pytest>=9.0.2",
+    "ruff>=0.14.14",
+]
 notebook = ["ipykernel>=7.2.0", "jupyterlab>=4.5.4"]
 
 [tool.pytest.ini_options]

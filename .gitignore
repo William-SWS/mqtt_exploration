@@ -51,3 +51,6 @@ results/figures/**
 Thumbs.db
 .idea/
 .vscode/
+
+# Site do curso (gerado pelo MkDocs)
+site/

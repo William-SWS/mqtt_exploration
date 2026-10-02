@@ -1,0 +1,95 @@
+site_name: Curso MQTT Intrusion IDS
+site_description: Refaça, aula a aula, a engenharia reprodutível de um detector de intrusão MQTT.
+theme:
+  name: material
+  language: pt-BR
+  features:
+    - navigation.footer
+    - navigation.sections
+    - navigation.top
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Mudar para modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Mudar para modo claro
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+nav:
+  - Início: index.md
+  - Curso:
+      - 01-1 Ambiente e pacote: 01-1-ambiente-e-pacote.md
+      - 01-2 Cenário YAML: 01-2-cenario-yaml.md
+      - 01-3 Runner e manifesto: 01-3-runner-e-manifesto.md
+      - 02-1 Handles e SHA-256: 02-1-handles-e-sha256.md
+      - 02-2 Aquisição atômica: 02-2-aquisicao-atomica.md
+      - 02-3 Publicar e recuperar: 02-3-publicar-e-recuperar.md
+      - 03-1 O MQTT e os três ambientes: 03-1-mqtt-e-os-tres-ambientes.md
+      - 03-2 Carga segura e contrato: 03-2-carga-segura-e-contrato.md
+      - 03-3 Missingness e dicionário: 03-3-missingness-e-dicionario.md
+      - 03-4 DoS (inundação): 03-4-dos-inundacao.md
+      - 03-5 MitM (tráfego alterado): 03-5-mitm-trafego-alterado.md
+      - 03-6 Intrusion (cliente desconhecido): 03-6-intrusion-cliente-desconhecido.md
+      - 03-7 Vazamento: 03-7-vazamento-identidade-conteudo-ordem.md
+      - 03-8 Estágio audit: 03-8-estagio-audit.md
+      - 03-9 Política de features: 03-9-politica-de-features-e-modelagem.md
+  - Apoio:
+      - Glossário: glossario.md
+      - Referência rápida: referencia.md
+      - Recursos: recursos.md
+  - Projeto:
+      - PRD: PRD.md
+      - Log de Decisões: DECISIONS.md
+      - Dicionário de dados: data_dictionary.md
+      - Catálogo de testes: testing/scenarios.md
+      - Pesquisa Kaggle (armazenamento e recuperação): research/kaggle-armazenamento-e-recuperacao.md
+  - Issues:
+      - Visão geral: issues/README.md
+      - 01 Runner: issues/01-project-runner.md
+      - 02 Ingestão Kaggle: issues/02-kaggle-ingestion.md
+      - 03 Auditoria de dados: issues/03-data-audit.md
+      - 04 Dados limpos e portáveis: issues/04-clean-portable-data.md
+      - 05 Validação temporal: issues/05-temporal-validation.md
+      - 06 Baseline OOF: issues/06-oof-baseline.md
+      - 07 Regimes de desbalanceamento: issues/07-imbalance-regimes.md
+      - 08 Registro de modelos: issues/08-model-registry.md
+      - 09 Seleção de features: issues/09-feature-selection.md
+      - 10 Screening: issues/10-screening.md
+      - 11 Optuna: issues/11-optuna.md
+      - 12 Tiny MLP: issues/12-tiny-mlp.md
+      - 13 Calibração e limiares: issues/13-calibration-thresholds.md
+      - 14 Ensembles: issues/14-ensembles.md
+      - 15 Relatório final: issues/15-final-report.md
+      - 16 Especificação edge: issues/16-edge-spec.md

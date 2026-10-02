@@ -63,3 +63,7 @@ visibilidade antes de qualquer publicação.
 ## User stories covered
 
 10–15, 30, 64 e 103–104.
+
+## Notas de execução
+
+- Curso: aulas 02-1, 02-2 e 02-3 escritas e verificadas por replay; detalhes nas entradas 5, 6 e 7 de `course/LOG.md`.

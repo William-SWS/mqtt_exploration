@@ -37,3 +37,10 @@
 ```text
 Co-Authored-By: <agent model> <noreply@example.com>
 ```
+
+## Curso MkDocs
+
+- O curso vem antes do código: cada ticket ganha uma aula, escrita com `/mkdocs-project-course <ticket>` (uma por ticket, dividida quando houver conceitos demais); o progresso do aprendiz é registrado com `/mkdocs-project-course progresso`.
+- `course/` guarda o estado do aprendiz e o histórico do curso, fora de `docs/` para não ser publicado. `src/` e `tests/` são escritos pelo usuário; um agente só escreve código real quando o usuário pedir explicitamente.
+- Handoff para qualquer agente ou ferramenta: antes de trabalhar no curso, leia `course/MISSION.md`, as últimas entradas e as pendências abertas de `course/LOG.md`, `course/learning-records/` e `course/NOTES.md`; registre cada aula escrita ou revisada e cada check-in como nova entrada no fim de `course/LOG.md`.
+- Executar o site: `uv run --locked mkdocs serve`; validar: `uv run --locked mkdocs build --strict` (depois `rm -rf site`).

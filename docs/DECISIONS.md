@@ -271,3 +271,30 @@ Esse procedimento altera somente o diretório de trabalho. Depois da revisão, `
 - **Evidência:** o artigo afirma que o schema contém 67 campos, mas suas tabelas enumeram somente 62 e omitem `frame.time_epoch`, `frame.marked`, `frame.md5_hash`, `frame.number` e `frame.offset_shift`. A Tabela 3 escreve `MitM`, enquanto o CSV contém `mitm`. O artigo informa 45.513 frames `DoS` e 49.112 `normal`, enquanto o arquivo verificado contém 45.514 e 49.111; o total de 94.625 permanece igual. Os hashes dos três arquivos coincidem com os registrados no projeto.
 - **Alternativas:** copiar literalmente apenas as tabelas do artigo; aceitar as contagens publicadas sem confrontar os arquivos; inferir todas as descrições somente pelos nomes das colunas; ou permitir identificadores e metadados de captura como features principais antes da auditoria de vazamento.
 - **Consequências:** contratos e testes devem respeitar os valores efetivamente observados e tornar qualquer normalização de rótulos explícita. Campos vazios continuam documentados, missingness MQTT é tratada inicialmente como ausência estrutural, e a política de features só pode ser promovida de preliminar para definitiva após as análises de vazamento, temporalidade, redundância e portabilidade.
+
+## ADR-024 — Curso MkDocs com uma aula por ticket
+
+- **Data:** 2026-10-01
+- **Status:** aceita
+- **Decisão:** documentar o projeto como um curso MkDocs (Material, `pt-BR`, paleta indigo com alternância claro/escuro), com uma aula por ticket implementado e estado do aprendiz em `course/`. As issues 01 e 02 excedem três conceitos novos e foram divididas em seis aulas: 01-1 ambiente e pacote, 01-2 cenário YAML, 01-3 runner e manifesto, 02-1 handles e SHA-256, 02-2 aquisição atômica e 02-3 publicar e recuperar. As aulas usam o código existente em `src/` e `tests/` como base, sem reescrevê-lo; os exercícios têm testes próprios.
+- **Evidência:** as issues 01 e 02 têm todos os critérios de aceite marcados e `src/mqtt_ids/` implementa runner, validação de cenário, aquisição e publicação Kaggle; a issue 03 está em andamento e ainda não ganha aula.
+- **Alternativas:** uma aula por issue com muitos conceitos; reescrever o código nas aulas; esperar o fim de todas as issues.
+- **Consequências:** `mkdocs` e `mkdocs-material` entram como dependências de desenvolvimento; `site/` fica fora do Git; cada aula é validada por replay antes de publicada; o log do projeto permanece em `docs/DECISIONS.md`.
+
+## ADR-025 — Duplicatas exatas são frames repetidos; DoS tem 34% (proposta)
+
+- **Data:** 2026-10-01
+- **Status:** proposta
+- **Decisão (proposta):** tratar duplicata exata como o mesmo frame repetido em mais de uma linha e decidir na issue 04 se a remoção ocorre em todos os ambientes (como a ADR-007 já prevê para o `Intrusion.csv`) ou só após uma avaliação de sensibilidade. Até lá, nenhuma duplicata é removida do raw.
+- **Evidência:** nos três arquivos verificados, `linhas − frames distintos (frame.number)` é igual ao número de duplicatas exatas: DoS 32.298 de 94.625 (32.269 de ataque e 29 normais; 62.327 frames distintos, até 22 linhas por frame), MitM 37 (todas normais) e Intrusion 30 (todas normais). A ADR-007 foi baseada apenas nas 30 do Intrusion. Sem duplicatas, o DoS teria 13.245 frames de ataque e 49.082 normais (de ~48% para ~21% de prevalência).
+- **Alternativas:** manter as linhas e ponderar; remover duplicatas exatas em todos os ambientes (ADR-007 literal); remover e preservar a contagem de repetições como derivação candidata (por exemplo, linhas por frame); remover apenas dentro de cada fold.
+- **Consequências:** se aceita a remoção, o contrato da issue 04 deve registrar por ambiente as linhas e classes removidas e os hashes de entrada e saída; as métricas do DoS passam a ser lidas sobre frames, não sobre linhas. A hipótese de que as repetições vêm de um segmento TCP com várias mensagens MQTT exportado em várias linhas não foi verificada (não há o PCAP original) e deve ser mantida como hipótese.
+
+## ADR-026 — Issue 03 dividida em nove aulas, sem código no workspace
+
+- **Data:** 2026-10-01
+- **Status:** aceita
+- **Decisão:** a issue 03 (auditoria e dicionário de dados) ganha nove aulas, 03-1 a 03-9, que cobrem os três ambientes MQTT_UAD (DoS, MitM e Intrusion) como problemas separados: o protocolo e os ambientes, a carga e o contrato de contagens, a ausência estrutural e o dicionário, uma aula por ambiente, o vazamento, o estágio `audit` e a política de features. O curso não escreve código em `src/`, `tests/`, `notebooks/` nem `configs/`: o aprendiz digita a partir das aulas, e cada aula é validada por replay numa cópia descartável.
+- **Evidência:** o pedido do aprendiz foi entender o comportamento e o significado de cada base, e as bases têm ataques de natureza distinta (inundação MQTT, ARP spoofing, sessões miméticas), medidos no replay; a issue 03 está em andamento e os critérios de aceite continuam abertos.
+- **Alternativas:** seis aulas condensadas, com os três ambientes numa só aula comparativa; escrever o código da issue 03 no repositório; focar só no `Intrusion.csv`, como no texto original da issue.
+- **Consequências:** os critérios de aceite da issue 03 só serão marcados pelo aprendiz depois de implementar e verificar; a política de features da aula 03-9 é uma proposta que o aprendiz registra em ADR própria; a ADR-025 (duplicatas do DoS) segue como proposta até a issue 04.

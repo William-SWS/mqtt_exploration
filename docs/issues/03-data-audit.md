@@ -35,3 +35,9 @@ Adicionar um estágio de auditoria que leia a entrada verificada, produza um dic
 ## User stories covered
 
 16–21.
+
+## Notas de execução
+
+- Curso: aulas 03-1 a 03-9 escritas e verificadas por replay (código de referência descartável fora do repositório); detalhes nas entradas 9 a 19 de `course/LOG.md`. Os critérios de aceite acima continuam desmarcados: marque-os ao implementar e verificar cada aula.
+- Achado que afeta a issue 04: duplicatas exatas no DoS (ADR-025, proposta).
+
